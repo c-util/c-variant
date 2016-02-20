@@ -1,0 +1,21 @@
+cvariant - Standalone GVariant Implementation in Standard ISO-C11
+
+DETAILS:
+        http://www.bus1.org
+
+BUG REPORTS:
+        https://github.com/bus1/cvariant/issues
+
+GIT:
+        git@github.com:bus1/cvariant.git
+        https://github.com/bus1/cvariant.git
+
+GITWEB:
+        https://github.com/bus1/cvariant
+
+LICENSE:
+        LGPLv2.1+ (LICENSE.LGPL2.1)
+        See COPYING for details.
+
+ABOUT:
+        XXX
