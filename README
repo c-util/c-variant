@@ -18,4 +18,26 @@ LICENSE:
         See COPYING for details.
 
 ABOUT:
-        XXX
+        The libcvariant project is a stand-alone implementation of the GVariant
+        specification, implemented in ISO-C11 with only very limited
+        dependencies on GCC/llvm compiler extensions. The library is aimed for
+        native use in C wherever GVariants need to be streamed. It is not aimed
+        for language bindings, nor recommended for use in native GVariant type
+        systems. It does not place any restrictions, though. You are free to
+        use it in any situation where you have to deal with GVariants.
+
+        GVariant is a specification for a type-system, including its
+        serialization format. It has its origins in DBus and glib, but is
+        completely independent of those. GVariant was designed for native use
+        in C. Large parts of its type-system can be represented natively in C
+        (including compound types via 'struct', real nesting via void
+        pointers, ...). However, GVariant extends this system with dynamically
+        sized arrays, strings, and true nesting. For more details, you are
+        recommended to read an introduction into GVariant, or dive directly
+        into the specification.
+
+        This library is optimized for marshaling/demarshaling of pakets or
+        files that are serialized as GVariants. It has a very convenient API to
+        (de-)serialize compound types from/to native types in C.
+        If you rather want a type-system built on GVariant, you are recommended
+        to look at the glib-2 implementation, including GObject.
