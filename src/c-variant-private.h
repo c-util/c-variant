@@ -38,7 +38,6 @@ typedef struct CVariantVargLevel CVariantVargLevel;
  * Macros
  */
 
-#define _align_(_x) __attribute__((__aligned__(_x)))
 #define _likely_(_x) (__builtin_expect(!!(_x), 1))
 #define _public_ __attribute__((__visibility__("default")))
 #define _unlikely_(_x) (__builtin_expect(!!(_x), 0))
