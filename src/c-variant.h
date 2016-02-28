@@ -118,7 +118,7 @@ typedef struct CVariant CVariant;
 
 /* management */
 
-int c_variant_new(CVariant **out, const char *type, size_t n_type, size_t hint_vecs, size_t hint_data);
+int c_variant_new(CVariant **out, const char *type, size_t n_type);
 int c_variant_new_from_vecs(CVariant **out, const char *type, size_t n_type, const struct iovec *vecs, size_t n_vecs);
 CVariant *c_variant_free(CVariant *cv);
 

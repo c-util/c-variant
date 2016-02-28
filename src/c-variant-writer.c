@@ -631,6 +631,72 @@ static int c_variant_write_one(CVariant *cv, char basic, const void *arg, size_t
 }
 
 /**
+ * c_variant_new() - create new variant ready for writing
+ * @cvp:        output variable for new variant
+ * @type:       type string
+ * @n_type:     length of @type
+ *
+ * This allocates a new variant of type @type. It is unsealed and ready for
+ * serialization. Any data that will be allocated during serialization, will be
+ * dynamically allocated and is owned by the variant itself.
+ *
+ * The type string is copied into the variant and can be released by the
+ * caller.
+ *
+ * On success, the new variant is returned in @cvp. On failure, @cvp stays
+ * untouched.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+_public_ int c_variant_new(CVariant **cvp, const char *type, size_t n_type) {
+        CVariantLevel *level;
+        CVariantType info;
+        CVariant *cv;
+        size_t size;
+        char *p_type;
+        void *extra;
+        int r;
+
+        assert(type || n_type == 0);
+
+        r = c_variant_signature_one(type, n_type, &info);
+        if (r < 0)
+                return r;
+
+        /* allocate 2k as initial buffer, except if fixed size */
+        size = info.size ?: ALIGN_TO(2048, 8);
+
+        r = c_variant_alloc(&cv, &p_type, &extra, n_type, info.n_levels + 8, 4, size);
+        if (r < 0)
+                return r;
+
+        memcpy(p_type, type, n_type);
+        memset(cv->vecs, 0, cv->n_vecs * sizeof(*cv->vecs));
+
+        /* split memory between front and tail */
+        cv->vecs[0].iov_base = extra;
+        cv->vecs[0].iov_len = ALIGN_TO(size * C_VARIANT_FRONT_SHARE / 100, 8);
+        cv->vecs[cv->n_vecs - 1].iov_base = (char *)extra + cv->vecs[0].iov_len;
+        cv->vecs[cv->n_vecs - 1].iov_len = size - cv->vecs[0].iov_len;
+
+        level = cv->state->levels + cv->state->i_levels;
+        level->size = info.size;
+        level->i_tail = 0;
+        level->v_tail = 0;
+        level->wordsize = 0;
+        level->enclosing = C_VARIANT_TUPLE_OPEN;
+        level->n_type = n_type;
+        level->v_front = 0;
+        level->i_front = 0;
+        level->index = 0;
+        level->offset = 0;
+        level->type = p_type;
+
+        *cvp = cv;
+        return 0;
+}
+
+/**
  * c_variant_beginv() - begin a new container
  * @cv:         variant to operate on, or NULL
  * @containers: containers to write, or NULL
