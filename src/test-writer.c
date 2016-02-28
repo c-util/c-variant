@@ -131,7 +131,60 @@ static void test_writer_basic(void) {
         cv = c_variant_free(cv);
 }
 
+static void test_writer_compound(void) {
+        const char *type = "(uaum(s)u)";
+        unsigned int u1, u2, u3, u4, u5, u6;
+        const char *s1;
+        CVariant *cv;
+        int r;
+
+        /* allocate variant and write each entry sequentially */
+
+        r = c_variant_new(&cv, type, strlen(type));
+        assert(r >= 0);
+
+        r = c_variant_begin(cv, "(");
+        assert(r >= 0);
+
+        r = c_variant_write(cv, "u", 0xffff);
+        assert(r >= 0);
+
+        r = c_variant_write(cv, "au", 4, 1, 2, 3, 4);
+        assert(r >= 0);
+
+        r = c_variant_write(cv, "m(s)", true, "foo");
+        assert(r >= 0);
+
+        r = c_variant_write(cv, "u", 0xffffffffU);
+        assert(r >= 0);
+
+        r = c_variant_end(cv, ")");
+        assert(r >= 0);
+
+        /* seal and verify */
+        r = c_variant_seal(cv);
+        assert(r >= 0);
+
+        r = c_variant_read(cv, "(uaum(s)u)",
+                           &u1,
+                           4, &u2, &u3, &u4, &u5,
+                           true, &s1,
+                           &u6);
+        assert(r >= 0);
+        assert(u1 == 0xffff);
+        assert(u2 == 1);
+        assert(u3 == 2);
+        assert(u4 == 3);
+        assert(u5 == 4);
+        assert(!strcmp(s1, "foo"));
+        assert(u6 == 0xffffffffU);
+
+        cv = c_variant_free(cv);
+        assert(!cv);
+}
+
 int main(int argc, char **argv) {
         test_writer_basic();
+        test_writer_compound();
         return 0;
 }
