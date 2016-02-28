@@ -46,6 +46,7 @@ libcvariant_private_la_SOURCES = \
 	src/c-variant.h \
 	src/c-variant-private.h \
 	src/c-variant-reader.c \
+	src/c-variant-writer.c \
 	src/c-variant.c
 
 # ------------------------------------------------------------------------------

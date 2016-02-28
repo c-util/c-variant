@@ -135,6 +135,13 @@ int c_variant_exit(CVariant *cv, const char *containers);
 int c_variant_readv(CVariant *cv, const char *signature, va_list args);
 void c_variant_rewind(CVariant *cv);
 
+/* writers */
+
+int c_variant_beginv(CVariant *cv, const char *containers, va_list args);
+int c_variant_end(CVariant *cv, const char *containers);
+int c_variant_writev(CVariant *cv, const char *signature, va_list args);
+int c_variant_seal(CVariant *cv);
+
 /* inline shortcuts */
 
 /**
@@ -184,6 +191,46 @@ static inline int c_variant_read(CVariant *cv, const char *signature, ...) {
 
         va_start(args, signature);
         r = c_variant_readv(cv, signature, args);
+        va_end(args);
+        return r;
+}
+
+/**
+ * c_variant_begin() - begin a new container
+ * @cv:         variant to write to
+ * @containers: containers to write
+ *
+ * This is a convenience wrapper around c_variant_beginv(), but accepting
+ * arguments directly, rather than via va_list.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+static inline int c_variant_begin(CVariant *cv, const char *containers, ...) {
+        va_list args;
+        int r;
+
+        va_start(args, containers);
+        r = c_variant_beginv(cv, containers, args);
+        va_end(args);
+        return r;
+}
+
+/**
+ * c_variant_write() - write data to variant
+ * @cv:         variant to write to
+ * @signature:  signature string
+ *
+ * This is a convenience wrapper around c_variant_writev(), but accepting
+ * arguments directly, rather than via va_list.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+static inline int c_variant_write(CVariant *cv, const char *signature, ...) {
+        va_list args;
+        int r;
+
+        va_start(args, signature);
+        r = c_variant_writev(cv, signature, args);
         va_end(args);
         return r;
 }
