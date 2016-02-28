@@ -495,6 +495,7 @@ static int c_variant_end_one(CVariant *cv) {
                 return c_variant_poison(cv, -EBADRQC);
 
         prev = cv->state->levels + cv->state->i_levels;
+        wz = c_variant_word_size(prev->offset, prev->index);
 
         switch (prev->enclosing) {
         case C_VARIANT_VARIANT:
@@ -506,7 +507,6 @@ static int c_variant_end_one(CVariant *cv) {
         case C_VARIANT_ARRAY:
         case C_VARIANT_TUPLE_OPEN:
         case C_VARIANT_PAIR_OPEN:
-                wz = c_variant_word_size(prev->offset, prev->index);
                 n = prev->index * (1 << wz);
                 break;
         default:
