@@ -98,3 +98,15 @@ test_signature_SOURCES = \
 
 test_signature_LDADD = \
 	libcvariant-private.la
+
+# ------------------------------------------------------------------------------
+# test-writer
+
+default_tests += \
+	test-writer
+
+test_writer_SOURCES = \
+	src/test-writer.c
+
+test_writer_LDADD = \
+	libcvariant-private.la
