@@ -46,6 +46,7 @@ typedef struct CVariant CVariant;
  * EMEDIUMTYPE: Invalid GVariant type/container specified.
  * EMSGSIZE: Message is larger than supported by this architecture. Very
  *           unlikely to happen, as you'd need type strings of large lengths.
+ * ENOBUFS: Too many iovecs.
  * ENOMEM: Cannot allocate required backing memory.
  * ENOTUNIQ: Attempt to modify the NULL GVariant.
  */
