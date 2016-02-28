@@ -405,12 +405,13 @@ static int c_variant_append(CVariant *cv,
         }
 
         switch (level->enclosing) {
-        case C_VARIANT_MAYBE:
-                /* make sure to mark a maybe as non-empty */
-                ++level->index;
-                /* fallthrough */
         case C_VARIANT_ARRAY:
                 break;
+        case C_VARIANT_MAYBE:
+                /* write maybe-marker for non-empty, dynamic maybes */
+                if (infop->size < 1)
+                        ++level->index;
+                /* fallthrough */
         default:
                 level->type += infop->n_type;
                 level->n_type -= infop->n_type;
