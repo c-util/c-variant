@@ -312,9 +312,6 @@ static int c_variant_reserve(CVariant *cv,
                 (vec_tail + 1)->iov_len = level->i_tail;
                 ++level->v_tail;
                 level->i_tail = 0;
-
-                /* tails have no global alignment; 8-byte alignment is fine */
-                assert(vec_tail->iov_base == ALIGN_PTR_TO(vec_tail->iov_base, 8));
         }
 
         /*
