@@ -572,7 +572,7 @@ static int c_variant_end_one(CVariant *cv) {
         /*
          * If this was a dynamic-sized type, we must store the framing-offset
          * at the tail. Memory for it was already reserved when the container
-         * was created, we just recover the pointer to it and write the no
+         * was created, we just recover the pointer to it and write the now
          * known framing offset.
          * Note that for tuples we never write a framing offset for the last
          * type. This also guarantees that the root-level never writes framing
