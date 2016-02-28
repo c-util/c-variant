@@ -78,10 +78,10 @@ enum {
         C_VARIANT_PAIR_CLOSE            = '}', /* obsolete, use ')' */
 
         /* API */
-        C_VARIANT_TUPLE                 = 'r',
-        C_VARIANT_PAIR                  = 'e',
-        C_VARIANT_BASIC                 = '?',
-        C_VARIANT_ANY                   = '*',
+        C_VARIANT_TUPLE                 = 'r', /* unused */
+        C_VARIANT_PAIR                  = 'e', /* unused */
+        C_VARIANT_BASIC                 = '?', /* unused */
+        C_VARIANT_ANY                   = '*', /* unused */
 
         /* helpers */
         C_VARIANT_MAX                   = 255,
