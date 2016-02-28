@@ -365,7 +365,7 @@ static int c_variant_append(CVariant *cv,
 
         r = c_variant_signature_next(level->type, level->n_type, infop);
         assert(r == 1);
-        assert(n_front == 0 || n_front == infop->size);
+        assert(infop->size == 0 || n_front == 0 || n_front == infop->size);
 
         switch (level->enclosing) {
         case C_VARIANT_TUPLE_OPEN:
