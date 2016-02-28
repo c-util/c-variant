@@ -635,7 +635,18 @@ static int c_variant_write_one(CVariant *cv, char basic, const void *arg, size_t
  * @containers: containers to write, or NULL
  * @args:       additional parameters
  *
- * XXX
+ * This begins writing a new container to @cv, moving the iterator into the
+ * container for following writes. The containers to enter have to be specified
+ * via @containers (if NULL, the next container is entered). Whenever you enter
+ * a variant, you must specify the type for the entire variant as another
+ * argument in @args.
+ *
+ * Valid elements for @containers are:
+ *   'v' to begin a variant
+ *   'm' to begin a maybe
+ *   'a' to begin an array
+ *   '(' to begin a tuple
+ *   '{' to begin a pair
  *
  * It is an programming error to call this on a sealed variant.
  *
@@ -693,7 +704,16 @@ _public_ int c_variant_beginv(CVariant *cv, const char *containers, va_list args
  * @cv:         variant to operate on, or NULL
  * @containers: containers to write, or NULL
  *
- * XXX
+ * This function is the counter-part to c_variant_beginv() (see its
+ * documentation for details). It works very similar, but rather than starting
+ * a new container, it finishes one and returns to the parent container.
+ *
+ * Valid elements for @containers are:
+ *   'v' to end a variant
+ *   'm' to end a maybe
+ *   'a' to end an array
+ *   ')' to end a tuple
+ *   '}' to end a pair
  *
  * It is an programming error to call this on a sealed variant.
  *
@@ -742,7 +762,32 @@ _public_ int c_variant_end(CVariant *cv, const char *containers) {
  * @signature:  signature string
  * @args:       additional parameters
  *
- * XXX
+ * This advances the internal iterator of @cv according to the signature string
+ * @signature, serializing each type and storing the information to the
+ * variant.
+ *
+ * This function reads one type after another from the signature, until it hits
+ * the end of the signature. For each type, the following operation is done:
+ *   - basic types: The caller must provide the data to store in the variant.
+ *                  For any fixed-size type equal to, or smaller than, 4 bytes,
+ *                  the data must be provided directly as an "int" or "unsigned
+ *                  int" as argument. Any 8 byte type must be provided as 8
+ *                  byte variable directly as argument.
+ *                  Any dynamic sized type (e.g., strings) must be provided as
+ *                  pointer (must not be NULL).
+ *   - variants: For every variant you specify, you must provide the type
+ *               string in @args (must not be NULL). The variant is then
+ *               entered and recursively written to.
+ *   - maybe: For every maybe you specify, you must provide a boolean in @args
+ *            which specifies whether the maybe should be entered, or whether
+ *            it should be written empty.
+ *   - array: For every array, you must provide an integer in @args, specifying
+ *            the number of elements to write. All those are then recursively
+ *            written into the variant.
+ *   - tuple/pair: Tuples and pairs are simply entered/exited as specified.
+ *
+ * Type processing stops at the first error, which will then be returned to the
+ * caller.
  *
  * It is an programming error to call this on a sealed variant.
  *
