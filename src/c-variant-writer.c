@@ -394,7 +394,7 @@ static int c_variant_append(CVariant *cv,
                 return r;
 
         /* de-account extra tail-space */
-        assert(n_unaccounted_tail >= level->i_tail);
+        assert(n_unaccounted_tail <= level->i_tail);
         level->i_tail -= n_unaccounted_tail;
 
         /* store frame */
