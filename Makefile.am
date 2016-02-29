@@ -37,17 +37,29 @@ AM_CFLAGS = $(OUR_CFLAGS)
 AM_LDFLAGS = $(OUR_LDFLAGS)
 
 # ------------------------------------------------------------------------------
+# libcvariant sources
+
+libcvariant_sources = \
+	src/c-variant.h \
+	src/c-variant-private.h \
+	src/c-variant-reader.c \
+	src/c-variant-writer.c \
+	src/c-variant.c
+
+# ------------------------------------------------------------------------------
 # libcvariant-private
 
 noinst_LTLIBRARIES += \
 	libcvariant-private.la
 
 libcvariant_private_la_SOURCES = \
-	src/c-variant.h \
-	src/c-variant-private.h \
-	src/c-variant-reader.c \
-	src/c-variant-writer.c \
-	src/c-variant.c
+	$(libcvariant_sources)
+
+if HAVE_GMP
+libcvariant_private_la_SOURCES += \
+	src/generator.h \
+	src/generator.c
+endif
 
 # ------------------------------------------------------------------------------
 # libcvariant
@@ -56,7 +68,7 @@ lib_LTLIBRARIES += \
 	libcvariant.la
 
 libcvariant_la_SOURCES = \
-	$(libcvariant_private_la_SOURCES)
+	$(libcvariant_sources)
 
 libcvariant_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
@@ -74,6 +86,20 @@ test_api_SOURCES = \
 
 test_api_LDADD = \
 	libcvariant.la # explicitly linked against public library
+
+# ------------------------------------------------------------------------------
+# test-generator
+
+if HAVE_GMP
+default_tests += \
+	test-generator
+endif
+
+test_generator_SOURCES = \
+	src/test-generator.c
+
+test_generator_LDADD = \
+	libcvariant-private.la
 
 # ------------------------------------------------------------------------------
 # test-reader

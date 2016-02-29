@@ -104,6 +104,12 @@ AC_SUBST(OUR_CPPFLAGS)
 AC_SUBST(OUR_LDFLAGS)
 
 # ------------------------------------------------------------------------------
+# optional test-suite dependencies
+
+AC_SEARCH_LIBS(__gmpz_init, gmp, [have_gmp=yes], [have_gmp=no])
+AM_CONDITIONAL(HAVE_GMP, [test $have_gmp=yes])
+
+# ------------------------------------------------------------------------------
 # report
 
 AC_CONFIG_FILES([Makefile])
@@ -115,6 +121,7 @@ AC_MSG_RESULT([
         exec_prefix:            ${exec_prefix}
         includedir:             ${includedir}
         libdir:                 ${libdir}
+        gmp:                    ${have_gmp}
 
         CFLAGS:                 ${OUR_CFLAGS} ${CFLAGS}
         CPPFLAGS:               ${OUR_CPPFLAGS} ${CPPFLAGS}
