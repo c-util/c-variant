@@ -26,6 +26,31 @@
 
 typedef struct GeneratorState GeneratorState;
 
+enum {
+        GENERATOR_BASIC_b,
+        GENERATOR_BASIC_y,
+        GENERATOR_BASIC_n,
+        GENERATOR_BASIC_q,
+        GENERATOR_BASIC_i,
+        GENERATOR_BASIC_u,
+        GENERATOR_BASIC_x,
+        GENERATOR_BASIC_t,
+        GENERATOR_BASIC_h,
+        GENERATOR_BASIC_d,
+        GENERATOR_BASIC_s,
+        GENERATOR_BASIC_o,
+        GENERATOR_BASIC_g,
+        _GENERATOR_BASIC_N,
+};
+
+enum {
+        GENERATOR_COMPOUND_m,
+        GENERATOR_COMPOUND_a,
+        GENERATOR_COMPOUND_r,
+        GENERATOR_COMPOUND_e,
+        _GENERATOR_COMPOUND_N,
+};
+
 struct GeneratorState {
         GeneratorState *parent;
         unsigned int rule;
@@ -42,15 +67,37 @@ struct Generator {
 };
 
 /*
- * Inverse Pair
- * ============
+ * (Inverse) Pair
+ * ==============
  *
- * This function implements an 'inverse pair-function'. It is quite similar to
- * the '(inverse) Cantor pairing function', but way easier to calculate. The
- * Cantor-pairing-function would have worked as well.
+ * These functions implement a 'pair-function' and its inverse. It is quite
+ * similar to the '(inverse) Cantor pairing function', but way easier to
+ * calculate. The Cantor-pairing-function would have worked as well, though.
  */
 
-static void generator_pi(Generator *gen, mpz_t pi1, mpz_t pi2, mpz_t seed) {
+static void generator_pi(Generator *gen, mpz_t seed, mpz_t pi1, mpz_t pi2) {
+        int res;
+
+        /*
+         * Pairing function that takes @pi1 and @pi2 and returns the pair as
+         * @seed. We use @gen as temporary variables, to avoid dynamic
+         * allocation on each call.
+         */
+
+        /* CAREFUL: pi1/pi2/seed may *overlap*! */
+
+        res = mpz_cmp(pi1, pi2);
+        if (res < 0) {
+                mpz_pow_ui(gen->index, pi2, 2);
+                mpz_add(seed, gen->index, pi1);
+        } else {
+                mpz_pow_ui(gen->index, pi1, 2);
+                mpz_add(gen->index, gen->index, pi1);
+                mpz_add(seed, gen->index, pi2);
+        }
+}
+
+static void generator_inverse_pi(Generator *gen, mpz_t pi1, mpz_t pi2, mpz_t seed) {
         int res;
 
         /*
@@ -173,31 +220,6 @@ static GeneratorState *generator_pop(Generator *gen) {
  * recommended to read up 'diagonalisation' and '(inverse) pair-functions'
  * before trying to understand the implementation.
  */
-
-enum {
-        GENERATOR_BASIC_b,
-        GENERATOR_BASIC_y,
-        GENERATOR_BASIC_n,
-        GENERATOR_BASIC_q,
-        GENERATOR_BASIC_i,
-        GENERATOR_BASIC_u,
-        GENERATOR_BASIC_x,
-        GENERATOR_BASIC_t,
-        GENERATOR_BASIC_h,
-        GENERATOR_BASIC_d,
-        GENERATOR_BASIC_s,
-        GENERATOR_BASIC_o,
-        GENERATOR_BASIC_g,
-        _GENERATOR_BASIC_N,
-};
-
-enum {
-        GENERATOR_COMPOUND_m,
-        GENERATOR_COMPOUND_a,
-        GENERATOR_COMPOUND_r,
-        GENERATOR_COMPOUND_e,
-        _GENERATOR_COMPOUND_N,
-};
 
 enum {
         GENERATOR_RULE_DONE,
@@ -344,7 +366,7 @@ static char generator_rule_TUPLE(Generator *gen) {
         case 1:
                 next = generator_push(gen);
                 next->rule = GENERATOR_RULE_TYPE;
-                generator_pi(gen, state->seed, next->seed, state->seed);
+                generator_inverse_pi(gen, state->seed, next->seed, state->seed);
                 return generator_rule_TYPE(gen);
         default:
                 assert(0);
@@ -373,6 +395,231 @@ static char generator_rule_PAIR(Generator *gen) {
 static char generator_rule_PAIR_CLOSE(Generator *gen) {
         generator_pop(gen);
         return '}';
+}
+
+/*
+ * Parser
+ * ======
+ *
+ * This parser implements the inverse operation of the generator-rules defined
+ * above. It simply inverts each step that the generator does, to allow callers
+ * to turn a given gvariant into its corresponding seed.
+ *
+ * The grammar and names are exactly the same for the inverse operation.
+ */
+
+enum {
+        GENERATOR_PARSER_DONE,
+        GENERATOR_PARSER_FAIL,
+        GENERATOR_PARSER_TYPE,
+        GENERATOR_PARSER_MAYBE,
+        GENERATOR_PARSER_ARRAY,
+        GENERATOR_PARSER_TUPLE,
+        GENERATOR_PARSER_TUPLE_CLOSE,
+        GENERATOR_PARSER_PAIR,
+        GENERATOR_PARSER_PAIR_CLOSE,
+        _GENERATOR_PARSER_N,
+};
+
+static unsigned long generator_unmap_basic(char c) {
+        switch (c) {
+        case 'b':
+                return GENERATOR_BASIC_b;
+        case 'y':
+                return GENERATOR_BASIC_y;
+        case 'n':
+                return GENERATOR_BASIC_n;
+        case 'q':
+                return GENERATOR_BASIC_q;
+        case 'i':
+                return GENERATOR_BASIC_i;
+        case 'u':
+                return GENERATOR_BASIC_u;
+        case 'x':
+                return GENERATOR_BASIC_x;
+        case 't':
+                return GENERATOR_BASIC_t;
+        case 'h':
+                return GENERATOR_BASIC_h;
+        case 'd':
+                return GENERATOR_BASIC_d;
+        case 's':
+                return GENERATOR_BASIC_s;
+        case 'o':
+                return GENERATOR_BASIC_o;
+        case 'g':
+                return GENERATOR_BASIC_g;
+        default:
+                return _GENERATOR_BASIC_N;
+        }
+}
+
+static void generator_fold_MAYBE(Generator *gen) {
+        GeneratorState *next, *state = gen->tip;
+
+        mpz_mul_ui(state->seed, state->seed, _GENERATOR_COMPOUND_N);
+        mpz_add_ui(state->seed, state->seed, GENERATOR_COMPOUND_m);
+        mpz_add_ui(state->seed, state->seed, _GENERATOR_BASIC_N + 2);
+
+        next = generator_pop(gen);
+        mpz_set(next->seed, state->seed);
+}
+
+static void generator_fold_ARRAY(Generator *gen) {
+        GeneratorState *next, *state = gen->tip;
+
+        mpz_mul_ui(state->seed, state->seed, _GENERATOR_COMPOUND_N);
+        mpz_add_ui(state->seed, state->seed, GENERATOR_COMPOUND_a);
+        mpz_add_ui(state->seed, state->seed, _GENERATOR_BASIC_N + 2);
+
+        next = generator_pop(gen);
+        mpz_set(next->seed, state->seed);
+}
+
+static int generator_fold(Generator *gen) {
+        GeneratorState *state, *next;
+
+        for (;;) {
+                state = gen->tip;
+                switch (state->rule) {
+                case GENERATOR_PARSER_MAYBE:
+                        generator_fold_MAYBE(gen);
+                        break;
+                case GENERATOR_PARSER_ARRAY:
+                        generator_fold_ARRAY(gen);
+                        break;
+                case GENERATOR_PARSER_TUPLE_CLOSE:
+                        next = generator_pop(gen);
+                        mpz_set(next->seed, state->seed);
+                        break;
+                case GENERATOR_PARSER_TUPLE:
+                        next = generator_push(gen);
+                        next->rule = GENERATOR_PARSER_TUPLE;
+                        /* fallthrough */
+                default:
+                        return 0;
+                }
+        }
+}
+
+static int generator_parser_TYPE(Generator *gen, char c) {
+        GeneratorState *next, *state = gen->tip;
+        unsigned long val;
+
+        val = generator_unmap_basic(c);
+        if (val < _GENERATOR_BASIC_N) {
+                next = generator_pop(gen);
+                mpz_set_ui(next->seed, val);
+                return generator_fold(gen);
+        } else if (c == 'v') {
+                next = generator_pop(gen);
+                mpz_set_ui(next->seed, _GENERATOR_BASIC_N);
+                return generator_fold(gen);
+        } else {
+                switch (c) {
+                case 'm':
+                        state->rule = GENERATOR_PARSER_MAYBE;
+                        next = generator_push(gen);
+                        next->rule = GENERATOR_PARSER_TYPE;
+                        break;
+                case 'a':
+                        state->rule = GENERATOR_PARSER_ARRAY;
+                        next = generator_push(gen);
+                        next->rule = GENERATOR_PARSER_TYPE;
+                        break;
+                case '(':
+                        state->rule = GENERATOR_PARSER_TUPLE_CLOSE;
+                        next = generator_push(gen);
+                        next->rule = GENERATOR_PARSER_TUPLE;
+                        return 0;
+                case '{':
+                        state->rule = GENERATOR_PARSER_PAIR;
+                        return 0;
+                default:
+                        state->rule = GENERATOR_PARSER_FAIL;
+                        return -EINVAL;
+                }
+        }
+
+        return 0;
+}
+
+static int generator_parser_TUPLE(Generator *gen, char c) {
+        GeneratorState *next, *state;
+
+        if (c != ')') {
+                next = generator_push(gen);
+                next->rule = GENERATOR_PARSER_TYPE;
+                return generator_parser_TYPE(gen, c);
+        }
+
+        state = generator_pop(gen);
+
+        if (state->rule != GENERATOR_PARSER_TUPLE) {
+                /* unit type "()" */
+                mpz_set_ui(state->seed, _GENERATOR_BASIC_N + 1);
+                return generator_fold(gen);
+        }
+
+        /* fold decision to end TUPLE */
+        mpz_mul_ui(state->seed, state->seed, 2);
+
+        /* fold each decision to continue TUPLE */
+        for (next = generator_pop(gen);
+             next->rule == GENERATOR_PARSER_TUPLE;
+             next = generator_pop(gen)) {
+                generator_pi(gen, state->seed, state->seed, next->seed);
+                mpz_mul_ui(state->seed, state->seed, 2);
+                mpz_add_ui(state->seed, state->seed, 1);
+        }
+
+        /* fold decision to use TUPLE */
+        mpz_mul_ui(state->seed, state->seed, _GENERATOR_COMPOUND_N);
+        mpz_add_ui(state->seed, state->seed, GENERATOR_COMPOUND_r);
+        mpz_add_ui(next->seed, state->seed, _GENERATOR_BASIC_N + 2);
+
+        return generator_fold(gen);
+}
+
+static int generator_parser_PAIR(Generator *gen, char c) {
+        GeneratorState *next, *state = gen->tip;
+        unsigned long val;
+
+        val = generator_unmap_basic(c);
+        if (val >= _GENERATOR_BASIC_N) {
+                state->rule = GENERATOR_PARSER_FAIL;
+                return -EINVAL;
+        }
+
+        next = generator_pop(gen);
+        mpz_set_ui(next->seed, val);
+        next = generator_push(gen);
+        next->rule = GENERATOR_PARSER_PAIR_CLOSE;
+        next = generator_push(gen);
+        next->rule = GENERATOR_PARSER_TYPE;
+        return 0;
+}
+
+static int generator_parser_PAIR_CLOSE(Generator *gen, char c) {
+        GeneratorState *next, *state = gen->tip;
+
+        if (c != '}') {
+                state->rule = GENERATOR_PARSER_FAIL;
+                return -EINVAL;
+        }
+
+        next = generator_pop(gen);
+
+        /* fold KEY and VALUE */
+        mpz_mul_ui(state->seed, state->seed, _GENERATOR_BASIC_N);
+        mpz_add(next->seed, next->seed, state->seed);
+
+        /* fold decision to use PAIR */
+        mpz_mul_ui(next->seed, next->seed, _GENERATOR_COMPOUND_N);
+        mpz_add_ui(next->seed, next->seed, GENERATOR_COMPOUND_e);
+        mpz_add_ui(next->seed, next->seed, _GENERATOR_BASIC_N + 2);
+
+        return generator_fold(gen);
 }
 
 /**
@@ -436,6 +683,21 @@ Generator *generator_free(Generator *gen) {
         free(gen);
 
         return NULL;
+}
+
+/**
+ * generator_reset() - reset generator
+ * @gen:        generator to reset
+ *
+ * This resets the current state of the generator @gen. It does *not* reset the
+ * seed value!
+ *
+ * The next call to generator_step() will start a new sequence with the current
+ * seed.
+ */
+void generator_reset(Generator *gen) {
+        while (gen->tip)
+                generator_pop(gen);
 }
 
 /**
@@ -530,16 +792,72 @@ char generator_step(Generator *gen) {
 }
 
 /**
- * generator_reset() - reset generator
- * @gen:        generator to reset
+ * generator_feed() - feed next character into type parser
+ * @gen:        generator to operate on
+ * @c:          next character to feed
  *
- * This resets the current state of the generator @gen. It does *not* reset the
- * seed value!
+ * This is the inverse of generator_step(). Rather than generating a type from
+ * a seed, this parses a type one by one and generates the seed it corresponds
+ * to. Simply feed your entire type into a reset generator and use
+ * generator_print() afterwards to access the resulting seed.
  *
- * The next call to generator_step() will start a new sequence with the current
- * seed.
+ * To make sure your type is fully parsed, you can feed your final binary 0
+ * into this just fine. If the type is done, this will succeed, otherwise it
+ * will return an error.
+ *
+ * You better not mix generator_feed() and generator_step() without resetting
+ * the generator in between. It will work fine, but the resulting data will be
+ * garbled.
+ *
+ * Return: 0 on success, negative error code if the type is invalid.
  */
-void generator_reset(Generator *gen) {
-        while (gen->tip)
-                generator_pop(gen);
+int generator_feed(Generator *gen, char c) {
+        GeneratorState *state = gen->tip;
+
+        if (!state) {
+                state = generator_push(gen);
+                state->rule = GENERATOR_PARSER_DONE;
+                state = generator_push(gen);
+                state->rule = GENERATOR_PARSER_TYPE;
+        }
+
+        switch (state->rule) {
+        case GENERATOR_PARSER_DONE:
+                if (!c)
+                        return 0;
+                state->rule = GENERATOR_PARSER_FAIL;
+                /* fallthrough */
+        case GENERATOR_PARSER_FAIL:
+                return -EINVAL;
+        case GENERATOR_PARSER_TYPE:
+                return generator_parser_TYPE(gen, c);
+        case GENERATOR_PARSER_TUPLE:
+                return generator_parser_TUPLE(gen, c);
+        case GENERATOR_PARSER_PAIR:
+                return generator_parser_PAIR(gen, c);
+        case GENERATOR_PARSER_PAIR_CLOSE:
+                return generator_parser_PAIR_CLOSE(gen, c);
+        default:
+                assert(0);
+                return 0;
+        }
+}
+
+/**
+ * generator_print() - print final seed
+ * @gen:        generator to query
+ * @f:          file to print to
+ * @base:       base to print number in
+ *
+ * This call prints the final seed after a full sequence was parsed via
+ * generator_feed(). It prints "<invalid>" if the sequence failed or is not
+ * finished, yet.
+ */
+void generator_print(Generator *gen, FILE *f, int base) {
+        GeneratorState *state = gen->tip;
+
+        if (state && state->rule == GENERATOR_PARSER_DONE)
+                mpz_out_str(f, base, state->seed);
+        else
+                fprintf(f, "<invalid>");
 }

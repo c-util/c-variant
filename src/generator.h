@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef __cplusplus
@@ -29,12 +30,14 @@ typedef struct Generator Generator;
 
 Generator *generator_new(void);
 Generator *generator_free(Generator *gen);
+void generator_reset(Generator *gen);
 
 void generator_seed_u32(Generator *gen, uint32_t seed);
 int generator_seed_str(Generator *gen, const char *str, int base);
-
 char generator_step(Generator *gen);
-void generator_reset(Generator *gen);
+
+int generator_feed(Generator *gen, char c);
+void generator_print(Generator *gen, FILE *f, int base);
 
 #ifdef __cplusplus
 }
