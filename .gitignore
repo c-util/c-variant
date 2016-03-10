@@ -17,10 +17,9 @@
 /configure
 .deps/
 .dirstamp
-/.libs/
-/libtool
 /Makefile
 /Makefile.in
+/install-tree
 
 /src/libcvariant.pc
 

@@ -28,8 +28,7 @@ CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST =
 pkginclude_HEADERS =
 pkgconfiglib_DATA =
-lib_LTLIBRARIES =
-noinst_LTLIBRARIES =
+noinst_LIBRARIES =
 check_PROGRAMS = $(default_tests)
 TESTS = $(default_tests)
 default_tests =
@@ -44,48 +43,51 @@ AM_CFLAGS = $(OUR_CFLAGS)
 AM_LDFLAGS = $(OUR_LDFLAGS)
 
 # ------------------------------------------------------------------------------
-# libcvariant sources
+# libcvariant.a
+
+noinst_LIBRARIES += \
+	libcvariant.a
 
 pkginclude_HEADERS += \
 	src/c-variant.h
 
-libcvariant_sources = \
-	$(pkginclude_HEADERS) \
+libcvariant_a_SOURCES = \
+	src/libcvariant.sym \
 	src/c-variant.h \
 	src/c-variant-private.h \
 	src/c-variant-reader.c \
 	src/c-variant-writer.c \
 	src/c-variant.c
 
-# ------------------------------------------------------------------------------
-# libcvariant-private
-
-noinst_LTLIBRARIES += \
-	libcvariant-private.la
-
-libcvariant_private_la_SOURCES = \
-	$(libcvariant_sources)
-
 if HAVE_GMP
-libcvariant_private_la_SOURCES += \
+libcvariant_a_SOURCES += \
 	src/generator.h \
 	src/generator.c
 endif
 
 # ------------------------------------------------------------------------------
-# libcvariant
+# libcvariant.so.0
 
-lib_LTLIBRARIES += \
-	libcvariant.la
+libcvariant.so.0: libcvariant.a $(top_srcdir)/src/libcvariant.sym
+	$(AM_V_CCLD)$(CCLD) $(AM_CFLAGS) $(AM_LDFLAGS) \
+	-shared \
+	-Wl,-soname=$@ \
+	-Wl,--version-script=$(top_srcdir)/src/libcvariant.sym \
+	-Wl,--whole-archive libcvariant.a -Wl,--no-whole-archive \
+	-o $@
 
-libcvariant_la_SOURCES = \
-	src/libcvariant.sym \
-	$(libcvariant_sources)
+CLEANFILES += \
+	libcvariant.so.0
 
-libcvariant_la_LDFLAGS = \
-	$(AM_LDFLAGS) \
-	-version-info $(LIBCVARIANT_CURRENT):$(LIBCVARIANT_REVISION):$(LIBCVARIANT_AGE) \
-	-Wl,--version-script=$(top_srcdir)/src/libcvariant.sym
+all-local: libcvariant.so.0
+
+install-exec-hook:
+	$(MKDIR_P) $(DESTDIR)$(libdir)
+	cp libcvariant.so.0 $(DESTDIR)$(libdir)
+	$(AM_V_LN)ln -sf libcvariant.so.0 $(DESTDIR)$(libdir)/libcvariant.so
+
+uninstall-hook:
+	rm -f $(DESTDIR)$(libdir)/libcvariant.so.0
 
 %.pc: %.pc.in
 	$(AM_V_GEN)$(SED) \
@@ -113,7 +115,7 @@ test_api_SOURCES = \
 	src/test-api.c
 
 test_api_LDADD = \
-	libcvariant.la # explicitly linked against public library
+	libcvariant.so.0 # explicitly linked against public library
 
 # ------------------------------------------------------------------------------
 # test-generator
@@ -127,7 +129,7 @@ test_generator_SOURCES = \
 	src/test-generator.c
 
 test_generator_LDADD = \
-	libcvariant-private.la
+	libcvariant.a
 
 # ------------------------------------------------------------------------------
 # test-reader
@@ -139,7 +141,7 @@ test_reader_SOURCES = \
 	src/test-reader.c
 
 test_reader_LDADD = \
-	libcvariant-private.la
+	libcvariant.a
 
 # ------------------------------------------------------------------------------
 # test-signature
@@ -151,7 +153,7 @@ test_signature_SOURCES = \
 	src/test-signature.c
 
 test_signature_LDADD = \
-	libcvariant-private.la
+	libcvariant.a
 
 # ------------------------------------------------------------------------------
 # test-writer
@@ -163,7 +165,7 @@ test_writer_SOURCES = \
 	src/test-writer.c
 
 test_writer_LDADD = \
-	libcvariant-private.la
+	libcvariant.a
 
 # ------------------------------------------------------------------------------¶
 # check "make install" directory tree

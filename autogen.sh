@@ -9,7 +9,20 @@ mkdir -p ./build/m4/
 autoreconf --force --install --symlink
 cd $oldpwd
 
-if [[ "$1" = "c" ]]; then
+# https://wiki.debian.org/Multiarch/Tuples
+if [[ "$HOSTTYPE" == "x86_64" ]]; then
+        ARCHITECTURE_TUPLE=x86_64-linux-gnu
+elif [[ "$HOSTTYPE" == "arm" ]]; then
+        ARCHITECTURE_TUPLE=arm-linux-gnueabihf
+else
+        echo "Unknown HOSTTYPE"
+        exit 1
+fi
+
+if [[ "$1" == "b" ]]; then
+        $topdir/configure --enable-debug --prefix=/usr --libdir=/usr/lib/$ARCHITECTURE_TUPLE
+        make clean
+elif [[ "$1" = "c" ]]; then
         $topdir/configure
         make clean
 else
