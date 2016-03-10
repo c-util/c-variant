@@ -22,6 +22,8 @@
 /Makefile
 /Makefile.in
 
+/src/libcvariant.pc
+
 /test-api
 /test-reader
 /test-signature

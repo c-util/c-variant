@@ -20,7 +20,14 @@ SUBDIRS = .
 # keep the test-suite.log and Makefile around at all times
 .PRECIOUS: $(TEST_SUITE_LOG) Makefile
 
+pkgincludedir=$(includedir)/org.bus1
+pkgconfiglibdir=$(libdir)/pkgconfig
+
+BUILT_SOURCES =
 CLEANFILES = $(BUILT_SOURCES)
+EXTRA_DIST =
+pkginclude_HEADERS =
+pkgconfiglib_DATA =
 lib_LTLIBRARIES =
 noinst_LTLIBRARIES =
 check_PROGRAMS = $(default_tests)
@@ -68,12 +75,29 @@ lib_LTLIBRARIES += \
 	libcvariant.la
 
 libcvariant_la_SOURCES = \
+	src/libcvariant.sym \
 	$(libcvariant_sources)
 
 libcvariant_la_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	-version-info $(LIBCVARIANT_CURRENT):$(LIBCVARIANT_REVISION):$(LIBCVARIANT_AGE) \
 	-Wl,--version-script=$(top_srcdir)/src/libcvariant.sym
+
+%.pc: %.pc.in
+	$(AM_V_GEN)$(SED) \
+		-e 's,@includedir\@,$(includedir),g' \
+		-e 's,@libdir\@,$(libdir),g' \
+		-e 's,@VERSION\@,$(VERSION),g' \
+		$< > $@
+
+pkgconfiglib_DATA += \
+	src/libcvariant.pc
+
+EXTRA_DIST += \
+	src/libcvariant.pc.in
+
+CLEANFILES += \
+	src/libcvariant.pc
 
 # ------------------------------------------------------------------------------
 # test-api
