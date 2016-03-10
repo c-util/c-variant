@@ -22,7 +22,10 @@
 /install-tree
 
 /src/libcvariant.pc
+libcvariant.so.0
 
 /test-api
+/test-generator
 /test-reader
 /test-signature
+/test-writer

@@ -27,8 +27,8 @@ EXTRA_DIST =
 pkginclude_HEADERS =
 pkgconfiglib_DATA =
 noinst_LIBRARIES =
-check_PROGRAMS = $(default_tests)
-TESTS = $(default_tests)
+check_PROGRAMS =
+TESTS =
 default_tests =
 
 AM_CPPFLAGS = \
@@ -163,6 +163,13 @@ test_writer_SOURCES = \
 
 test_writer_LDADD = \
 	libcvariant.a
+
+# ------------------------------------------------------------------------------
+# test suite
+
+AM_TESTS_ENVIRONMENT = LD_LIBRARY_PATH=$(abs_builddir)
+check_PROGRAMS += $(default_tests)
+TESTS += $(default_tests)
 
 # ------------------------------------------------------------------------------¶
 # check "make install" directory tree
