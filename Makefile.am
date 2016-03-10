@@ -46,7 +46,11 @@ AM_LDFLAGS = $(OUR_LDFLAGS)
 # ------------------------------------------------------------------------------
 # libcvariant sources
 
+pkginclude_HEADERS += \
+	src/c-variant.h
+
 libcvariant_sources = \
+	$(pkginclude_HEADERS) \
 	src/c-variant.h \
 	src/c-variant-private.h \
 	src/c-variant-reader.c \
@@ -160,3 +164,12 @@ test_writer_SOURCES = \
 
 test_writer_LDADD = \
 	libcvariant-private.la
+
+# ------------------------------------------------------------------------------¶
+# check "make install" directory tree
+
+install-tree: all
+	rm -rf $(abs_srcdir)/install-tree
+	$(MAKE) install DESTDIR=$(abs_srcdir)/install-tree
+	tree $(abs_srcdir)/install-tree
+.PHONY: install-tree
