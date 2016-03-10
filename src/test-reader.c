@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "c-variant.h"
+#include "org.bus1/c-variant.h"
 #include "c-variant-private.h"
 
 static void test_reader_basic(void) {

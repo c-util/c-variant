@@ -47,11 +47,10 @@ noinst_LIBRARIES += \
 	libcvariant.a
 
 pkginclude_HEADERS += \
-	src/c-variant.h
+	src/org.bus1/c-variant.h
 
 libcvariant_a_SOURCES = \
 	src/libcvariant.sym \
-	src/c-variant.h \
 	src/c-variant-private.h \
 	src/c-variant-reader.c \
 	src/c-variant-writer.c \

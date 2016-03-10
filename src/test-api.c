@@ -26,7 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "c-variant.h"
+#include "org.bus1/c-variant.h"
 
 static void test_api_constants(void) {
         assert(C_VARIANT_MAX_LEVEL >= (1 << 8) - 1);

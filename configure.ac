@@ -11,7 +11,7 @@ AC_INIT([cvariant],
 # ------------------------------------------------------------------------------
 # autotools
 
-AC_CONFIG_SRCDIR([src/c-variant.h])
+AC_CONFIG_SRCDIR([src/org.bus1/c-variant.h])
 AC_CONFIG_MACRO_DIR([build/m4])
 AC_CONFIG_HEADERS([build/config.h])
 AC_CONFIG_AUX_DIR([build/build-aux])
