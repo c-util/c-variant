@@ -102,7 +102,7 @@ AC_SUBST(OUR_LDFLAGS)
 # optional test-suite dependencies
 
 AC_SEARCH_LIBS(__gmpz_init, gmp, [have_gmp=yes], [have_gmp=no])
-AM_CONDITIONAL(HAVE_GMP, [test $have_gmp=yes])
+AM_CONDITIONAL([HAVE_GMP], [test "$have_gmp" = "yes"])
 
 # ------------------------------------------------------------------------------
 # report
