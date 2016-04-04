@@ -16,6 +16,25 @@
 ***/
 
 LIBCVARIANT_1 {
+global:
+        c_variant_new;
+        c_variant_new_from_vecs;
+        c_variant_free;
+        c_variant_is_sealed;
+        c_variant_return_poison;
+        c_variant_get_vecs;
+
+        c_variant_peek_count;
+        c_variant_peek_type;
+        c_variant_enter;
+        c_variant_exit;
+        c_variant_readv;
+        c_variant_rewind;
+
+        c_variant_beginv;
+        c_variant_end;
+        c_variant_writev;
+        c_variant_seal;
 local:
        *;
 };
