@@ -35,7 +35,6 @@ static void test_api_constants(void) {
 }
 
 static void test_api_symbols(void) {
-        struct iovec *vecs;
         const char *type;
         CVariant *cv;
         va_list args;
@@ -61,8 +60,7 @@ static void test_api_symbols(void) {
         r = c_variant_return_poison(cv);
         assert(!r);
 
-        r = c_variant_get_vecs(cv, &vecs, &n);
-        assert(r >= 0);
+        c_variant_get_vecs(cv, &n);
 
         /* c_variant_{peek_count,peek_type}() */
 

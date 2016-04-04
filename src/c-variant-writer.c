@@ -73,32 +73,6 @@ static void c_variant_word_store(void *addr, size_t wordsize, size_t value) {
  * XXX
  */
 
-/**
- * c_variant_get_vecs() - get the underlying vecs
- * @cv:                 the variant to operate on
- * @vecsp:              a pointer to an iovec array
- * @n_vecsp:            a pointer to the size of the iovec array
- *
- * A pointer to the underlying vector array is returned, the array is only valid
- * as long as the cvariant is.
- *
- * Return: 0 on success, or a negative error code on failure.
- */
-_public_ int c_variant_get_vecs(CVariant *cv, struct iovec **vecsp,
-                                size_t *n_vecsp) {
-        if (_unlikely_(!cv))
-                return -ENOTUNIQ;
-
-        assert(vecsp);
-        assert(n_vecsp);
-        assert(cv->sealed);
-
-        *vecsp = cv->vecs;
-        *n_vecsp = cv->n_vecs;
-
-        return 0;
-}
-
 static int c_variant_insert_vecs(CVariant *cv, size_t idx, size_t num) {
         struct iovec *v;
         size_t n;

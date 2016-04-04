@@ -937,3 +937,29 @@ _public_ bool c_variant_is_sealed(CVariant *cv) {
 _public_ int c_variant_return_poison(CVariant *cv) {
         return cv ? -cv->poison : 0;
 }
+
+/**
+ * c_variant_get_vecs() - retrieve backing iovec array
+ * @cv:                 variant to operate on, or NULL
+ * @n_vecsp:            output storage for iovec array size
+ *
+ * This returns a pointer to the backing iovec array of the variant, and its
+ * size via @n_vecsp.
+ *
+ * It is an programming error to call this on an unsealed variant.
+ *
+ * Return: Pointer to iovec array.
+ */
+_public_ const struct iovec *c_variant_get_vecs(CVariant *cv, size_t *n_vecsp) {
+        assert(n_vecsp);
+
+        if (_unlikely_(!cv)) {
+                *n_vecsp = 0;
+                return NULL;
+        }
+
+        assert(cv->sealed);
+
+        *n_vecsp = cv->n_vecs;
+        return cv->vecs;
+}
