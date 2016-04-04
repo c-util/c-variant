@@ -20,10 +20,8 @@
 /Makefile
 /Makefile.in
 /install-tree
-
+/libcvariant.so.0
 /src/libcvariant.pc
-libcvariant.so.0
-
 /test-api
 /test-generator
 /test-reader

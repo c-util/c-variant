@@ -1,3 +1,4 @@
+#
 #  This file is part of bus1. See COPYING for details.
 #
 #  bus1 is free software; you can redistribute it and/or modify it
@@ -12,9 +13,10 @@
 #
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with bus1; If not, see <http://www.gnu.org/licenses/>.
+#
 
 Name: libcvariant
-Description:  GVariant Library
+Description: Standalone GVariant Implementation
 Version: @VERSION@
-Libs: -L$@libdir@ -lcvariant
-Cflags: -I$@includedir@
+Libs: -L@libdir@ -lcvariant
+Cflags: -I@includedir@

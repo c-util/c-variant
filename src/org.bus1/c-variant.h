@@ -124,7 +124,6 @@ CVariant *c_variant_free(CVariant *cv);
 
 bool c_variant_is_sealed(CVariant *cv);
 int c_variant_return_poison(CVariant *cv);
-
 int c_variant_get_vecs(CVariant *cv, struct iovec **vecsp, size_t *n_vecsp);
 
 /* readers */

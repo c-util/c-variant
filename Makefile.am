@@ -46,45 +46,52 @@ AM_LDFLAGS = $(OUR_LDFLAGS)
 noinst_LIBRARIES += \
 	libcvariant.a
 
-pkginclude_HEADERS += \
-	src/org.bus1/c-variant.h
-
 libcvariant_a_SOURCES = \
-	src/libcvariant.sym \
+	src/c-variant.c \
 	src/c-variant-private.h \
 	src/c-variant-reader.c \
 	src/c-variant-writer.c \
-	src/c-variant.c
+	src/libcvariant.sym \
+	src/org.bus1/c-variant.h
 
 if HAVE_GMP
 libcvariant_a_SOURCES += \
-	src/generator.h \
-	src/generator.c
+	src/generator.c \
+	src/generator.h
 endif
 
 # ------------------------------------------------------------------------------
 # libcvariant.so.0
 
+all-local: libcvariant.so.0
+
+pkginclude_HEADERS += \
+	src/org.bus1/c-variant.h
+
 libcvariant.so.0: libcvariant.a $(top_srcdir)/src/libcvariant.sym
-	$(AM_V_CCLD)$(CCLD) $(AM_CFLAGS) $(AM_LDFLAGS) \
-	-shared \
+	$(AM_V_CCLD)$(LINK) -shared \
 	-Wl,-soname=$@ \
 	-Wl,--version-script=$(top_srcdir)/src/libcvariant.sym \
-	-Wl,--whole-archive libcvariant.a -Wl,--no-whole-archive \
-	-o $@
+	-Wl,--whole-archive libcvariant.a -Wl,--no-whole-archive
 
 CLEANFILES += \
 	libcvariant.so.0
 
-all-local: libcvariant.so.0
+install-exec-local:
+	@echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
+		$(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1
+	@echo " $(INSTALL) libcvariant.so.0 '$(DESTDIR)$(libdir)'"; \
+		$(INSTALL) libcvariant.so.0 "$(DESTDIR)$(libdir)" || exit $$?
+	@echo " $(LN_S) -f libcvariant.so.0 '$(DESTDIR)$(libdir)/libcvariant.so'"; \
+		$(LN_S) -f libcvariant.so.0 "$(DESTDIR)$(libdir)/libcvariant.so" || exit $$?
 
-install-exec-hook:
-	$(MKDIR_P) $(DESTDIR)$(libdir)
-	cp libcvariant.so.0 $(DESTDIR)$(libdir)
-	$(AM_V_LN)ln -sf libcvariant.so.0 $(DESTDIR)$(libdir)/libcvariant.so
+uninstall-local:
+	@test ! -d "$(DESTDIR)$(libdir)" || \
+		{ echo " ( cd '$(DESTDIR)$(libdir)' && rm -f libcvariant.so.0 )"; \
+		  rm -f "$(DESTDIR)$(libdir)/libcvariant.so.0"; }
 
-uninstall-hook:
-	rm -f $(DESTDIR)$(libdir)/libcvariant.so.0
+# ------------------------------------------------------------------------------
+# libcvariant.pc
 
 %.pc: %.pc.in
 	$(AM_V_GEN)$(SED) \
@@ -175,7 +182,7 @@ TESTS += $(default_tests)
 # check "make install" directory tree
 
 install-tree: all
-	rm -rf $(abs_srcdir)/install-tree
-	$(MAKE) install DESTDIR=$(abs_srcdir)/install-tree
-	tree $(abs_srcdir)/install-tree
+	rm -rf $(abs_builddir)/install-tree
+	$(MAKE) install DESTDIR=$(abs_builddir)/install-tree
+	tree $(abs_builddir)/install-tree
 .PHONY: install-tree
