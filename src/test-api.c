@@ -101,6 +101,9 @@ static void test_api_symbols(void) {
         r = c_variant_end(cv, ")");
         assert(r >= 0);
 
+        r = c_variant_seal(cv);
+        assert(r >= 0);
+
         /* cleanup */
 
         cv = c_variant_free(cv);
