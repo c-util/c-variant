@@ -141,6 +141,7 @@ static void c_variant_swap_vecs(CVariant *cv, size_t a, size_t b) {
 }
 
 static int c_variant_reserve(CVariant *cv,
+                             size_t n_extra_vecs,
                              size_t front_alignment,
                              size_t front_allocation,
                              void **frontp,
@@ -220,24 +221,23 @@ static int c_variant_reserve(CVariant *cv,
                 n_tail = 0;
         }
 
+        n = vec_tail - vec_front - 1;
+        if (_unlikely_(n < n_extra_vecs + 2 * !!(n_front || n_tail))) {
+                /* remember tail-index since realloc might move it */
+                i = cv->n_vecs - (vec_tail - cv->vecs);
+
+                r = c_variant_insert_vecs(cv,
+                                          (vec_front - cv->vecs) + 1,
+                                          n_extra_vecs + 2);
+                if (r < 0)
+                        return r;
+
+                /* re-calculate end-vector, after array was modified */
+                vec_tail = cv->vecs + cv->n_vecs - i;
+        }
+
         /* if either is non-zero, we need a new buffer allocation */
-        if (n_front || n_tail) {
-                /* make sure there are at least 2 unused vecs */
-                n = vec_tail - vec_front;
-                if (n < 2) {
-                        /* remember tail-index since realloc might move it */
-                        i = cv->n_vecs - (vec_tail - cv->vecs);
-
-                        r = c_variant_insert_vecs(cv,
-                                                  (vec_front - cv->vecs) + 1,
-                                                  2 - n);
-                        if (r < 0)
-                                return r;
-
-                        /* re-calculate end-vector, after array was modified */
-                        vec_tail = cv->vecs + cv->n_vecs - i;
-                }
-
+        if (_unlikely_(n_front || n_tail)) {
                 /*
                  * Now that we have the iovecs, we need the actual buffer
                  * space. We start with 2^12 bytes (4k / one page), and
@@ -347,6 +347,7 @@ static int c_variant_reserve(CVariant *cv,
 static int c_variant_append(CVariant *cv,
                             char element,
                             CVariantType *info,
+                            size_t n_extra_vecs,
                             size_t n_front,
                             void **frontp,
                             size_t n_unaccounted_tail,
@@ -384,7 +385,8 @@ static int c_variant_append(CVariant *cv,
          * *unaccounted*, that is, we immediately subtract them from the tail
          * marker of this level again.
          */
-        r = c_variant_reserve(cv, infop->alignment, n_front, frontp,
+        r = c_variant_reserve(cv, n_extra_vecs,
+                              info->alignment, n_front, frontp,
                               need_frame ? 3 : 0,
                               n_unaccounted_tail + (need_frame ? 8 : 0),
                               &tail);
@@ -444,7 +446,7 @@ static int c_variant_begin_one(CVariant *cv, char container, const char *variant
         r = c_variant_signature_next(level->type, level->n_type, &info);
         assert(r == 1);
 
-        r = c_variant_append(cv, container, &info, 0, NULL, n_tail, &tail);
+        r = c_variant_append(cv, container, &info, 0, 0, NULL, n_tail, &tail);
         if (r < 0)
                 return r;
 
@@ -657,7 +659,7 @@ static int c_variant_write_one(CVariant *cv, char basic, const void *arg, size_t
         r = c_variant_signature_next(level->type, level->n_type, &info);
         assert(r == 1);
 
-        r = c_variant_append(cv, basic, &info, n_arg, &front, 0, NULL);
+        r = c_variant_append(cv, basic, &info, 0, n_arg, &front, 0, NULL);
         if (r < 0)
                 return r;
 
