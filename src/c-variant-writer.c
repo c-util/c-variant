@@ -346,7 +346,7 @@ static int c_variant_reserve(CVariant *cv,
 
 static int c_variant_append(CVariant *cv,
                             char element,
-                            CVariantType *infop,
+                            CVariantType *info,
                             size_t n_front,
                             void **frontp,
                             size_t n_unaccounted_tail,
@@ -363,18 +363,16 @@ static int c_variant_append(CVariant *cv,
         if (_unlikely_(level->n_type < 1 || *level->type != element))
                 return c_variant_poison(cv, -EBADRQC);
 
-        r = c_variant_signature_next(level->type, level->n_type, infop);
-        assert(r == 1);
-        assert(infop->size == 0 || n_front == 0 || n_front == infop->size);
+        assert(info->size == 0 || n_front == 0 || n_front == info->size);
 
         switch (level->enclosing) {
         case C_VARIANT_TUPLE_OPEN:
         case C_VARIANT_PAIR_OPEN:
-                if (infop->n_type >= level->n_type)
+                if (info->n_type >= level->n_type)
                         break;
                 /* fallthrough */
         case C_VARIANT_ARRAY:
-                need_frame = (infop->size < 1);
+                need_frame = (info->size < 1);
                 break;
         }
 
@@ -409,12 +407,12 @@ static int c_variant_append(CVariant *cv,
                 break;
         case C_VARIANT_MAYBE:
                 /* write maybe-marker for non-empty, dynamic maybes */
-                if (infop->size < 1)
+                if (info->size < 1)
                         ++level->index;
                 /* fallthrough */
         default:
-                level->type += infop->n_type;
-                level->n_type -= infop->n_type;
+                level->type += info->n_type;
+                level->n_type -= info->n_type;
                 break;
         }
 
@@ -439,11 +437,17 @@ static int c_variant_begin_one(CVariant *cv, char container, const char *variant
         else
                 n_tail = 0;
 
+        level = cv->state->levels + cv->state->i_levels;
+        if (_unlikely_(level->n_type < 1))
+                return c_variant_poison(cv, -EBADRQC);
+
+        r = c_variant_signature_next(level->type, level->n_type, &info);
+        assert(r == 1);
+
         r = c_variant_append(cv, container, &info, 0, NULL, n_tail, &tail);
         if (r < 0)
                 return r;
 
-        level = cv->state->levels + cv->state->i_levels;
         c_variant_push_level(cv);
         next = cv->state->levels + cv->state->i_levels;
 
@@ -616,11 +620,19 @@ static int c_variant_end_try(CVariant *cv, char container) {
 }
 
 static int c_variant_write_one(CVariant *cv, char basic, const void *arg, size_t n_arg) {
+        CVariantLevel *level;
         CVariantType info;
         void *front;
         int r;
 
         assert(n_arg > 0);
+
+        level = cv->state->levels + cv->state->i_levels;
+        if (_unlikely_(level->n_type < 1))
+                return c_variant_poison(cv, -EBADRQC);
+
+        r = c_variant_signature_next(level->type, level->n_type, &info);
+        assert(r == 1);
 
         r = c_variant_append(cv, basic, &info, n_arg, &front, 0, NULL);
         if (r < 0)
