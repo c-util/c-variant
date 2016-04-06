@@ -354,10 +354,11 @@ static int c_variant_peek(CVariant *cv,
                         break;
                 case C_VARIANT_TUPLE_OPEN:
                 case C_VARIANT_PAIR_OPEN:
+                        idx = (level->index - 1) * wz;
                         if (infop->n_type == level->n_type) {
-                                offset = level->size;
+                                if (idx <= level->size)
+                                        offset = level->size - idx;
                         } else {
-                                idx = (level->index - 1) * wz;
                                 tail = c_variant_level_tail(cv, level, idx, &tail_size);
 
                                 if (_likely_(wz <= tail_size)) {
