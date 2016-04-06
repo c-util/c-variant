@@ -49,12 +49,11 @@ static void gv_to_n(Generator *gen, const char *s) {
 
 int main(int argc, char **argv) {
         Generator *gen;
+        int r = 0;
 
         gen = generator_new();
 
-        if (argc < 2) {
-                /* XXX: run standard tests */
-        } else if (argc == 2) {
+        if (argc == 2) {
                 if (!argv[1][strspn(argv[1], "0123456789")])
                         n_to_gv(gen, argv[1]);
                 else
@@ -67,11 +66,12 @@ int main(int argc, char **argv) {
                 n_to_gv(gen, argv[2]);
                 printf("\n");
         } else {
-                fprintf(stderr, "usage: %s [fold|unfold] [<number>]\n",
+                fprintf(stderr, "usage: %s [fold|unfold] <number/type>\n",
                         program_invocation_short_name);
+                r = 77;
         }
 
         gen = generator_free(gen);
 
-        return 0;
+        return r;
 }
