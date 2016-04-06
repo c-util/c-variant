@@ -1005,6 +1005,9 @@ _public_ int c_variant_seal(CVariant *cv) {
 
         level = cv->state->levels + cv->state->i_levels;
 
+        /* clip trailing vector */
+        cv->vecs[level->v_front].iov_len = level->i_front;
+
         /* release all unused vectors */
         for (i = level->v_front + 1; i < cv->n_vecs; ++i)
                 if (((char *)(cv->vecs + cv->n_vecs))[i])
