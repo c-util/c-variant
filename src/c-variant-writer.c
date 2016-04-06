@@ -518,9 +518,31 @@ static int c_variant_end_one(CVariant *cv) {
                 return c_variant_poison(cv, -EFAULT);
         }
 
-        r = c_variant_reserve(cv, 0, n, &front, 0, 0, &tail);
-        if (r < 0)
-                return r;
+        if (prev->size < 1) {
+                /*
+                 * Variable-size container which requires 'n' additional front
+                 * bytes for framing-offsets and other management data. No
+                 * alignment is enforced, not is trailing padding added.
+                 */
+                r = c_variant_reserve(cv, 0, 0, n, &front, 0, 0, &tail);
+                if (r < 0)
+                        return r;
+        } else {
+                /*
+                 * Fixed-size container of size prev->size. We *must* ensure
+                 * the container has a size multiple of its alignment, hence,
+                 * we add trailing zero bytes as padding here.
+                 */
+                assert(!n);
+                assert(prev->offset <= prev->size);
+
+                n = prev->size - prev->offset;
+                r = c_variant_reserve(cv, 0, 0, n, &front, 0, 0, &tail);
+                if (r < 0)
+                        return r;
+
+                memset(front, 0, n);
+        }
 
         c_variant_pop_level(cv);
         level = cv->state->levels + cv->state->i_levels;
