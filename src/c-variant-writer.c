@@ -667,6 +667,81 @@ static int c_variant_write_one(CVariant *cv, char basic, const void *arg, size_t
         return 0;
 }
 
+static int c_variant_insert_one(CVariant *cv, const char *type, const struct iovec *vecs, size_t n_vecs, size_t size) {
+        CVariantLevel *level;
+        CVariantType info;
+        size_t n_type, i, idx;
+        struct iovec *v;
+        uint64_t frame;
+        int r;
+
+        level = cv->state->levels + cv->state->i_levels;
+        if (_unlikely_(level->n_type < 1))
+                return c_variant_poison(cv, -EBADRQC);
+
+        r = c_variant_signature_next(level->type, level->n_type, &info);
+        assert(r == 1);
+
+        n_type = strlen(type);
+        if (_unlikely_(n_type != info.n_type || strncmp(type, info.type, n_type)))
+                return c_variant_poison(cv, -EBADRQC);
+
+        if (_unlikely_(info.size > 0 && size != info.size))
+                return c_variant_poison(cv, -EBADMSG);
+
+        r = c_variant_append(cv, *type, &info, n_vecs + 1, 0, NULL, 0, NULL);
+        if (r < 0)
+                return r;
+
+        /* make sure there are at least 'n_vecs + 1' unused vectors */
+        assert(cv->n_vecs - level->v_front - level->v_tail - 2U >= n_vecs + 1U);
+
+        /*
+         * Clip the current front and prepare the next vector with the
+         * remaining buffer space. Then insert the requested vectors in between
+         * both and verify alignment restrictions.
+         */
+        v = cv->vecs + level->v_front;
+        v[n_vecs + 1].iov_base = (char *)v->iov_base + level->i_front;
+        v[n_vecs + 1].iov_len = v->iov_len - level->i_front;
+        v->iov_len = level->i_front;
+
+        for (i = 0; i < n_vecs; ++i) {
+                idx = level->v_front + i + 1;
+                if (((char *)(cv->vecs + cv->n_vecs))[idx]) {
+                        ((char *)(cv->vecs + cv->n_vecs))[idx] = false;
+                        free((cv->vecs + idx)->iov_base);
+                }
+                cv->vecs[idx] = vecs[i];
+        }
+
+        level->v_front += n_vecs + 1;
+        level->i_front = 0;
+        level->offset += size;
+
+        /* see c_variant_end_one(); we have to update the framing offset */
+        if (info.size < 1) {
+                switch (level->enclosing) {
+                case C_VARIANT_TUPLE_OPEN:
+                case C_VARIANT_PAIR_OPEN:
+                        /* last element never stores framing offsets */
+                        if (level->n_type < 1)
+                                break;
+                        /* fallthrough */
+                case C_VARIANT_ARRAY:
+                        assert(level->i_tail >= 8);
+                        assert(!(level->i_tail & 7));
+
+                        v = cv->vecs + cv->n_vecs - level->v_tail - 1;
+                        frame = level->offset;
+                        memcpy((char *)v->iov_base + level->i_tail - 8, &frame, 8);
+                        break;
+                }
+        }
+
+        return 0;
+}
+
 /**
  * c_variant_new() - create new variant ready for writing
  * @cvp:        output variable for new variant
@@ -995,6 +1070,52 @@ _public_ int c_variant_writev(CVariant *cv, const char *signature, va_list args)
         }
 
         return 0;
+}
+
+/**
+ * c_variant_insert() - insert iovecs
+ * @cv:         variant to operate on, or NULL
+ * @type:       type string
+ * @vecs:       iovec array
+ * @n_vecs:     number of vectors in @vecs
+ *
+ * This works similar to c_variant_writev(), but rather than copying data into
+ * the variant, it inserts the passed iovecs directly, without deep-copying the
+ * actual payload. This assumes the caller properly serialized the data
+ * according to the GVariant specification. No verification is done. Note that
+ * only a single type can be inserted, rather than a stream of types, since the
+ * caller cannot deduce the constraints without also knowing the surrounding
+ * type. This would make the API non-straightforward to use, so we expect
+ * callers to properly separate types.
+ *
+ * If the data to be inserted is incorrectly marshaled, none of the surrounding
+ * data is affected. That is, a proper receiver of the message will be able to
+ * decode anything properly, and gets the verbatim data exactly for the block
+ * inserted with this call.
+ *
+ * It is an programming error to call this on a sealed variant.
+ *
+ * Return: 0 on success, negative error code on failure.
+ */
+_public_ int c_variant_insert(CVariant *cv, const char *type, const struct iovec *vecs, size_t n_vecs) {
+        size_t i, size;
+
+        size = 0;
+        for (i = 0; i < n_vecs; ++i) {
+                if (size + vecs[i].iov_len < size)
+                        return cv ? c_variant_poison(cv, -EFBIG) : -EFBIG;
+                size += vecs[i].iov_len;
+        }
+
+        if (_unlikely_(!cv)) {
+                if (strcmp(type, "()"))
+                        return -EBADRQC;
+                if (size != 1)
+                        return -ENOTUNIQ;
+                return 0;
+        }
+
+        return c_variant_insert_one(cv, type, vecs, n_vecs, size);
 }
 
 /**

@@ -104,6 +104,19 @@ static void test_api_symbols(void) {
         r = c_variant_seal(cv);
         assert(r >= 0);
 
+        cv = c_variant_free(cv);
+        assert(!cv);
+
+        /* c_variant_{insert}() */
+
+        r = c_variant_new(&cv, "()", 2);
+        assert(r >= 0);
+
+        r = c_variant_insert(cv, "()",
+                             &(struct iovec){ .iov_base = (void *)"\0", .iov_len = 1 },
+                             1);
+        assert(r >= 0);
+
         /* cleanup */
 
         cv = c_variant_free(cv);

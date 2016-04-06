@@ -34,6 +34,7 @@ global:
         c_variant_beginv;
         c_variant_end;
         c_variant_writev;
+        c_variant_insert;
         c_variant_seal;
 local:
        *;

@@ -40,6 +40,7 @@ typedef struct CVariant CVariant;
  * However, such validation is not always assumed necessary, hence, it is
  * perfectly valid to rely on the error codes.
  *
+ * EBADMSG: Caller-provided GVariant serialization is invalid.
  * EBADRQC: Specified type does not match type of variant.
  * EFBIG: Scatter-gather array larger than the address space.
  * ELOOP: Nesting level of the GVariant type is higher than supported.
@@ -141,6 +142,7 @@ void c_variant_rewind(CVariant *cv);
 int c_variant_beginv(CVariant *cv, const char *containers, va_list args);
 int c_variant_end(CVariant *cv, const char *containers);
 int c_variant_writev(CVariant *cv, const char *signature, va_list args);
+int c_variant_insert(CVariant *cv, const char *type, const struct iovec *vecs, size_t n_vecs);
 int c_variant_seal(CVariant *cv);
 
 /* inline shortcuts */
