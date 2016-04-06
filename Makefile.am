@@ -136,6 +136,18 @@ test_generator_LDADD = \
 	libcvariant.a
 
 # ------------------------------------------------------------------------------
+# test-perf
+
+default_tests += \
+	test-perf
+
+test_perf_SOURCES = \
+	src/test-perf.c
+
+test_perf_LDADD = \
+	libcvariant.a
+
+# ------------------------------------------------------------------------------
 # test-reader
 
 default_tests += \
