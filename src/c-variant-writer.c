@@ -1013,7 +1013,10 @@ _public_ int c_variant_seal(CVariant *cv) {
                 if (((char *)(cv->vecs + cv->n_vecs))[i])
                         free((void *)((unsigned long)cv->vecs[i].iov_base & ~7));
 
+        /* move trailing state array up-front and shrink iovec array */
+        memmove(&cv->vecs[level->v_front + 1], &cv->vecs[cv->n_vecs], level->v_front + 1);
         cv->n_vecs = level->v_front + 1;
+
         cv->sealed = true;
         c_variant_level_root(level,
                              level->offset,
