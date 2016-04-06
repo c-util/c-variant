@@ -571,7 +571,8 @@ static int c_variant_end_one(CVariant *cv) {
          * prev->offset correctly reflects the difference in bytes between
          * both fronts.
          */
-        level->i_front += prev->offset;
+        level->v_front = prev->v_front;
+        level->i_front = prev->i_front;
         level->offset += prev->offset;
 
         /*
