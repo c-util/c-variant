@@ -150,7 +150,7 @@ static int c_variant_reserve(CVariant *cv,
                              size_t tail_allocation,
                              void **tailp) {
         CVariantLevel *level;
-        size_t i, n, rem, n_front, n_tail;
+        size_t i, j, n, rem, n_front, n_tail;
         struct iovec *vec_front, *vec_tail;
         void *p;
         int r;
@@ -225,15 +225,15 @@ static int c_variant_reserve(CVariant *cv,
         n = vec_tail - vec_front - 1;
         if (_unlikely_(n < n_extra_vecs + 2 * !!(n_front || n_tail))) {
                 /* remember tail-index since realloc might move it */
+                j = vec_front - cv->vecs;
                 i = cv->n_vecs - (vec_tail - cv->vecs);
 
-                r = c_variant_insert_vecs(cv,
-                                          (vec_front - cv->vecs) + 1,
-                                          n_extra_vecs + 2);
+                r = c_variant_insert_vecs(cv, j + 1, n_extra_vecs + 2);
                 if (r < 0)
                         return r;
 
-                /* re-calculate end-vector, after array was modified */
+                /* re-calculate vectors, as they might have moved */
+                vec_front = cv->vecs + j;
                 vec_tail = cv->vecs + cv->n_vecs - i;
         }
 
