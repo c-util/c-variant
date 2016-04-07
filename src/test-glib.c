@@ -192,6 +192,156 @@ static void test_generate(const char *type, CVariant **cvp, GVariant **gvp) {
         *gvp = gvc;
 }
 
+static void test_compare(CVariant *cv, GVariant *gv) {
+        const GVariantType *gvt;
+        GVariantIter gvi[C_VARIANT_MAX_VARG];
+        GVariant *gvig[C_VARIANT_MAX_VARG];
+        CVariantVarg varg;
+        const char *s, *type;
+        uint64_t val_64;
+        uint32_t val_32;
+        uint16_t val_16;
+        uint8_t val_8;
+        double val_f;
+        size_t n, nest;
+        GVariant *g;
+        int r, c;
+
+        type = c_variant_peek_type(cv, &n);
+        gvt = g_variant_get_type(gv);
+
+        assert(n == g_variant_type_get_string_length(gvt));
+        assert(!memcmp(type, g_variant_type_peek_string(gvt), n));
+
+        nest = 0;
+        g = gv;
+        for (c = c_variant_varg_init(&varg, type, n);
+             c;
+             c = c_variant_varg_next(&varg)) {
+                if (c == -1) {
+                        r = c_variant_exit(cv, NULL);
+                        assert(r >= 0);
+
+                        assert(nest-- > 0);
+                        g_variant_unref(gvig[nest]);
+                        continue;
+                }
+
+                if (nest > 0)
+                        g = g_variant_iter_next_value(&gvi[nest - 1]);
+                else
+                        g = g_variant_ref(gv);
+                assert(g);
+
+                switch (c) {
+                case C_VARIANT_VARIANT:
+                        c_variant_enter(cv, "v");
+                        type = c_variant_peek_type(cv, &n);
+                        c_variant_varg_push(&varg, type, n, -1);
+
+                        g_variant_iter_init(&gvi[nest], g);
+                        gvig[nest] = g_variant_ref(g);
+                        ++nest;
+                        break;
+                case C_VARIANT_MAYBE:
+                        c_variant_enter(cv, "m");
+                        n = c_variant_peek_count(cv);
+                        c_variant_varg_enter_bound(&varg, cv, n);
+
+                        g_variant_iter_init(&gvi[nest], g);
+                        gvig[nest] = g_variant_ref(g);
+                        ++nest;
+                        break;
+                case C_VARIANT_ARRAY:
+                        c_variant_enter(cv, "a");
+                        n = c_variant_peek_count(cv);
+                        c_variant_varg_enter_bound(&varg, cv, n);
+
+                        g_variant_iter_init(&gvi[nest], g);
+                        gvig[nest] = g_variant_ref(g);
+                        ++nest;
+                        break;
+                case C_VARIANT_TUPLE_OPEN:
+                        c_variant_enter(cv, "(");
+                        c_variant_varg_enter_unbound(&varg, cv, ')');
+
+                        g_variant_iter_init(&gvi[nest], g);
+                        gvig[nest] = g_variant_ref(g);
+                        ++nest;
+                        break;
+                case C_VARIANT_PAIR_OPEN:
+                        c_variant_enter(cv, "{");
+                        c_variant_varg_enter_unbound(&varg, cv, '}');
+
+                        g_variant_iter_init(&gvi[nest], g);
+                        gvig[nest] = g_variant_ref(g);
+                        ++nest;
+                        break;
+                case C_VARIANT_INT64:
+                        c_variant_read(cv, "x", &val_64);
+                        assert((int64_t)val_64 == g_variant_get_int64(g));
+                        break;
+                case C_VARIANT_UINT64:
+                        c_variant_read(cv, "t", &val_64);
+                        assert((uint64_t)val_64 == g_variant_get_uint64(g));
+                        break;
+                case C_VARIANT_DOUBLE:
+                        c_variant_read(cv, "d", &val_f);
+                        assert(!(val_f > g_variant_get_double(g)) &&
+                               !(val_f < g_variant_get_double(g)));
+                        break;
+                case C_VARIANT_INT32:
+                        c_variant_read(cv, "i", &val_32);
+                        assert((int32_t)val_32 == g_variant_get_int32(g));
+                        break;
+                case C_VARIANT_UINT32:
+                        c_variant_read(cv, "u", &val_32);
+                        assert((uint32_t)val_32 == g_variant_get_uint32(g));
+                        break;
+                case C_VARIANT_HANDLE:
+                        c_variant_read(cv, "h", &val_32);
+                        assert((int32_t)val_32 == g_variant_get_handle(g));
+                        break;
+                case C_VARIANT_INT16:
+                        c_variant_read(cv, "n", &val_16);
+                        assert((int16_t)val_16 == g_variant_get_int16(g));
+                        break;
+                case C_VARIANT_UINT16:
+                        c_variant_read(cv, "q", &val_16);
+                        assert((uint16_t)val_16 == g_variant_get_uint16(g));
+                        break;
+                case C_VARIANT_BOOL:
+                        c_variant_read(cv, "b", &val_8);
+                        assert((bool)val_8 == g_variant_get_boolean(g));
+                        break;
+                case C_VARIANT_BYTE:
+                        c_variant_read(cv, "y", &val_8);
+                        assert((guchar)val_8 == g_variant_get_byte(g));
+                        break;
+                case C_VARIANT_STRING:
+                        c_variant_read(cv, "s", &s);
+                        assert(!strcmp(s, g_variant_get_string(g, NULL)));
+                        break;
+                case C_VARIANT_PATH:
+                        c_variant_read(cv, "o", &s);
+                        assert(!strcmp(s, g_variant_get_string(g, NULL)));
+                        break;
+                case C_VARIANT_SIGNATURE:
+                        c_variant_read(cv, "g", &s);
+                        assert(!strcmp(s, g_variant_get_string(g, NULL)));
+                        break;
+                default:
+                        assert(0);
+                        break;
+                }
+
+                r = c_variant_return_poison(cv);
+                assert(r >= 0);
+
+                g_variant_unref(g);
+        }
+}
+
 static void test_print_cv(CVariant *cv) {
         CVariantVarg varg;
         const char *type, *s;
@@ -365,6 +515,8 @@ static void test_type(const char *type) {
                 test_print_cv(cv);
                 assert(0);
         }
+
+        test_compare(cv, gv);
 
         g_bytes_unref(gb);
         g_bytes_unref(cb);
