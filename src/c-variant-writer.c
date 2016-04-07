@@ -98,6 +98,7 @@ static int c_variant_insert_vecs(CVariant *cv, size_t idx, size_t num) {
 
         /* allocate some more, to serve future requests */
         n = (n + 8 < C_VARIANT_MAX_VECS) ? n + 8 : C_VARIANT_MAX_VECS;
+        num = n - cv->n_vecs;
 
         v = malloc(n * sizeof(*v) + n);
         if (!v)
