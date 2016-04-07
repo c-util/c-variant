@@ -841,8 +841,10 @@ void c_variant_varg_enter_bound(CVariantVarg *varg, CVariant *cv, size_t n_array
         assert(!strncmp(vlevel->type, level->type, level->n_type));
 
         c_variant_varg_push(varg, vlevel->type, level->n_type, n_array);
-        vlevel->type += level->n_type;
-        vlevel->n_type -= level->n_type;
+        if (vlevel->n_array == (size_t)-1) {
+                vlevel->type += level->n_type;
+                vlevel->n_type -= level->n_type;
+        }
 }
 
 void c_variant_varg_enter_unbound(CVariantVarg *varg, CVariant *cv, char closing) {
@@ -855,8 +857,10 @@ void c_variant_varg_enter_unbound(CVariantVarg *varg, CVariant *cv, char closing
         assert(vlevel->type[level->n_type] == closing);
 
         c_variant_varg_push(varg, vlevel->type, level->n_type, -1);
-        vlevel->type += level->n_type + 1U;
-        vlevel->n_type -= level->n_type + 1U;
+        if (vlevel->n_array == (size_t)-1) {
+                vlevel->type += level->n_type + 1U;
+                vlevel->n_type -= level->n_type + 1U;
+        }
 }
 
 void c_variant_varg_enter_default(CVariantVarg *varg, bool is_bound, size_t n_array) {
