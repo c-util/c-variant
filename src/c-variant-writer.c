@@ -322,6 +322,7 @@ static int c_variant_reserve(CVariant *cv,
          */
 
         n = ALIGN_TO(level->offset, 1 << front_alignment) - level->offset;
+        memset((char *)vec_front->iov_base + level->i_front, 0, n);
         level->i_front += n;
         level->offset += n;
         level->i_tail = ALIGN_TO(level->i_tail, 1 << tail_alignment);
