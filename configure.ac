@@ -105,6 +105,9 @@ AC_SUBST(OUR_LDFLAGS)
 # ------------------------------------------------------------------------------
 # optional test-suite dependencies
 
+PKG_CHECK_MODULES(GLIB, [glib-2.0 >= 0.26], [have_glib=yes], [have_glib=no])
+AM_CONDITIONAL(HAVE_GLIB, [test "$have_glib" = "yes"])
+
 AC_SEARCH_LIBS(__gmpz_init, gmp, [have_gmp=yes], [have_gmp=no])
 AM_CONDITIONAL([HAVE_GMP], [test "$have_gmp" = "yes"])
 
@@ -120,6 +123,7 @@ AC_MSG_RESULT([
         exec_prefix:            ${exec_prefix}
         includedir:             ${includedir}
         libdir:                 ${libdir}
+        glib:                   ${have_glib}
         gmp:                    ${have_gmp}
 
         CFLAGS:                 ${OUR_CFLAGS} ${CFLAGS}

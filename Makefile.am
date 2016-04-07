@@ -37,7 +37,7 @@ AM_CPPFLAGS = \
 	-I $(top_builddir)/src \
 	$(OUR_CPPFLAGS)
 
-AM_CFLAGS = $(OUR_CFLAGS)
+AM_CFLAGS = $(OUR_CFLAGS) $(GLIB_CFLAGS)
 AM_LDFLAGS = $(OUR_LDFLAGS)
 
 # ------------------------------------------------------------------------------
@@ -134,6 +134,23 @@ test_generator_SOURCES = \
 
 test_generator_LDADD = \
 	libcvariant.a
+
+# ------------------------------------------------------------------------------
+# test-glib
+
+if HAVE_GMP
+if HAVE_GLIB
+default_tests += \
+	test-glib
+endif
+endif
+
+test_glib_SOURCES = \
+	src/test-glib.c
+
+test_glib_LDADD = \
+	libcvariant.a \
+	$(GLIB_LIBS)
 
 # ------------------------------------------------------------------------------
 # test-perf
