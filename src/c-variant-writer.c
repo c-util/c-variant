@@ -981,6 +981,7 @@ _public_ int c_variant_writev(CVariant *cv, const char *signature, va_list args)
         uint32_t arg_32;
         uint16_t arg_16;
         uint8_t arg_8;
+        double arg_d;
         int arg_i;
         int r, c;
 
@@ -1030,9 +1031,14 @@ _public_ int c_variant_writev(CVariant *cv, const char *signature, va_list args)
                         break;
                 case C_VARIANT_INT64:
                 case C_VARIANT_UINT64:
-                case C_VARIANT_DOUBLE:
                         arg_64 = va_arg(args, uint64_t);
                         r = c_variant_write_one(cv, c, &arg_64, sizeof(arg_64));
+                        if (r < 0)
+                                return r;
+                        break;
+                case C_VARIANT_DOUBLE:
+                        arg_d = va_arg(args, double);
+                        r = c_variant_write_one(cv, c, &arg_d, sizeof(arg_d));
                         if (r < 0)
                                 return r;
                         break;
