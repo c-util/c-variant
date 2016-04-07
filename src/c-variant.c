@@ -815,6 +815,18 @@ int c_variant_varg_next(CVariantVarg *varg) {
         return c; /* next type */
 }
 
+const char *c_variant_varg_type(CVariantVarg *varg, size_t *n_typep) {
+        CVariantVargLevel *vlevel = &varg->levels[varg->i_levels];
+
+        if (vlevel->n_array == (size_t)-1) {
+                *n_typep = vlevel->n_type;
+                return vlevel->type;
+        } else {
+                *n_typep = vlevel->n_type + 1;
+                return vlevel->type - 1;
+        }
+}
+
 void c_variant_varg_push(CVariantVarg *varg, const char *type, size_t n_type, size_t n_array) {
         CVariantVargLevel *vlevel;
 

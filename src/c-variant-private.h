@@ -225,6 +225,7 @@ struct CVariantVarg {
 
 int c_variant_varg_init(CVariantVarg *varg, const char *type, size_t n_type);
 int c_variant_varg_next(CVariantVarg *varg);
+const char *c_variant_varg_type(CVariantVarg *varg, size_t *n_typep);
 void c_variant_varg_push(CVariantVarg *varg, const char *type, size_t n_type, size_t n_array);
 void c_variant_varg_enter_bound(CVariantVarg *varg, CVariant *cv, size_t n_array);
 void c_variant_varg_enter_unbound(CVariantVarg *varg, CVariant *cv, char closing);
