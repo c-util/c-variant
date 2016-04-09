@@ -41,7 +41,7 @@ AM_CFLAGS = $(OUR_CFLAGS) $(GLIB_CFLAGS)
 AM_LDFLAGS = $(OUR_LDFLAGS)
 
 # ------------------------------------------------------------------------------
-# libcvariant.a
+# library archive
 
 noinst_LIBRARIES += \
 	libcvariant.a
@@ -61,7 +61,7 @@ libcvariant_a_SOURCES += \
 endif
 
 # ------------------------------------------------------------------------------
-# libcvariant.so.0
+# shared library built from archive
 
 all-local: libcvariant.so.0
 
