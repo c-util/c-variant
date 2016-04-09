@@ -21,9 +21,12 @@
 /Makefile.in
 /install-tree
 /libcvariant.so.0
-/src/libcvariant.pc
+/src/cvariant.pc
 /test-api
 /test-generator
+/test-glib
 /test-reader
+/test-perf
 /test-signature
 /test-writer
+

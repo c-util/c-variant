@@ -90,9 +90,6 @@ uninstall-local:
 		{ echo " ( cd '$(DESTDIR)$(libdir)' && rm -f libcvariant.so.0 )"; \
 		  rm -f "$(DESTDIR)$(libdir)/libcvariant.so.0"; }
 
-# ------------------------------------------------------------------------------
-# libcvariant.pc
-
 %.pc: %.pc.in
 	$(AM_V_GEN)$(SED) \
 		-e 's,@includedir\@,$(includedir),g' \
@@ -101,13 +98,13 @@ uninstall-local:
 		$< > $@
 
 pkgconfiglib_DATA += \
-	src/libcvariant.pc
+	src/cvariant.pc
 
 EXTRA_DIST += \
-	src/libcvariant.pc.in
+	src/cvariant.pc.in
 
 CLEANFILES += \
-	src/libcvariant.pc
+	src/cvariant.pc
 
 # ------------------------------------------------------------------------------
 # test-api
