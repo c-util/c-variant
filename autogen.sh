@@ -20,7 +20,7 @@ else
 fi
 
 if [[ "$1" == "b" ]]; then
-        $topdir/configure --enable-debug --prefix=/usr --libdir=/usr/lib/$ARCHITECTURE_TUPLE
+        $topdir/configure --prefix=/usr --libdir=/usr/lib/$ARCHITECTURE_TUPLE
         make clean
 elif [[ "$1" = "c" ]]; then
         $topdir/configure
