@@ -2,16 +2,16 @@
 # versions
 
 AC_PREREQ([2.64])
-AC_INIT([cvariant],
+AC_INIT([c-variant],
         [1],
-        [http://www.github.com/bus1/cvariant],
-        [cvariant],
-        [http://www.github.com/bus1/cvariant])
+        [http://www.github.com/c-util/c-variant],
+        [c-variant],
+        [http://www.github.com/c-util/c-variant])
 
 # ------------------------------------------------------------------------------
 # autotools
 
-AC_CONFIG_SRCDIR([src/org.bus1/c-variant.h])
+AC_CONFIG_SRCDIR([src/c-variant.h])
 AC_CONFIG_MACRO_DIR([build/m4])
 AC_CONFIG_HEADERS([build/config.h])
 AC_CONFIG_AUX_DIR([build/build-aux])

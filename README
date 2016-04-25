@@ -1,24 +1,24 @@
-cvariant - Standalone GVariant Implementation in Standard ISO-C11
+c-variant - Standalone GVariant Implementation in Standard ISO-C11
 
 DETAILS:
-        http://www.bus1.org
+        https://github.com/c-util/c-variant
 
 BUG REPORTS:
-        https://github.com/bus1/cvariant/issues
+        https://github.com/c-util/c-variant/issues
 
 GIT:
-        git@github.com:bus1/cvariant.git
-        https://github.com/bus1/cvariant.git
+        git@github.com:c-util/c-variant.git
+        https://github.com/c-util/c-variant.git
 
 GITWEB:
-        https://github.com/bus1/cvariant
+        https://github.com/c-util/c-variant
 
 LICENSE:
         LGPLv2.1+ (LICENSE.LGPL2.1)
         See COPYING for details.
 
 ABOUT:
-        The libcvariant project is a stand-alone implementation of the GVariant
+        The c-variant project is a stand-alone implementation of the GVariant
         specification, implemented in ISO-C11 with only very limited
         dependencies on GCC/llvm compiler extensions. The library is aimed for
         native use in C wherever GVariants need to be streamed. It is not aimed

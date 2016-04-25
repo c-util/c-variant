@@ -18,13 +18,12 @@ export GCC_COLORS
 # keep the test-suite.log and Makefile around at all times
 .PRECIOUS: $(TEST_SUITE_LOG) Makefile
 
-pkgincludedir=$(includedir)/org.bus1
 pkgconfiglibdir=$(libdir)/pkgconfig
 
 BUILT_SOURCES =
 CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST =
-pkginclude_HEADERS =
+include_HEADERS =
 pkgconfiglib_DATA =
 noinst_LIBRARIES =
 check_PROGRAMS =
@@ -52,7 +51,7 @@ libcvariant_a_SOURCES = \
 	src/c-variant-reader.c \
 	src/c-variant-writer.c \
 	src/libcvariant.sym \
-	src/org.bus1/c-variant.h
+	src/c-variant.h
 
 if HAVE_GMP
 libcvariant_a_SOURCES += \
@@ -65,8 +64,8 @@ endif
 
 all-local: libcvariant.so.0
 
-pkginclude_HEADERS += \
-	src/org.bus1/c-variant.h
+include_HEADERS += \
+	src/c-variant.h
 
 libcvariant.so.0: libcvariant.a $(top_srcdir)/src/libcvariant.sym
 	$(AM_V_CCLD)$(LINK) -shared \
@@ -98,13 +97,13 @@ uninstall-local:
 		$< > $@
 
 pkgconfiglib_DATA += \
-	src/cvariant.pc
+	src/c-variant.pc
 
 EXTRA_DIST += \
-	src/cvariant.pc.in
+	src/c-variant.pc.in
 
 CLEANFILES += \
-	src/cvariant.pc
+	src/c-variant.pc
 
 # ------------------------------------------------------------------------------
 # test-api
