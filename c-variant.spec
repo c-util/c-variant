@@ -15,7 +15,7 @@ BuildRequires:  autoconf
 BuildRequires:  automake
 
 %description
-Standalone GVariant Implementation in Standard ISO-C11
+Standalone GVariant Implementation in Standard ISO-C11.
 
 %package        devel
 Summary:        Development files for %{name}
